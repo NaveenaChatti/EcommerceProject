@@ -10,14 +10,13 @@ The raw data comes from a Kaggle dataset on Brazilian e-commerce and includes **
 
 - Customers
 - Orders
-- Payments
 - Reviews
 - Order Items
 - Products
 - Sellers
 - Geolocation
-- A SQL database version (hosted on `files.io`)
-- A MongoDB export (hosted separately for NoSQL exploration)
+- Payments - A SQL database version (hosted on `files.io`)
+- Product_category- A MongoDB export (hosted separately for NoSQL exploration)
 
 ---
 
@@ -29,7 +28,7 @@ The raw data comes from a Kaggle dataset on Brazilian e-commerce and includes **
 | Data Processing | PySpark, Azure Synapse Analytics |
 | Data Orchestration | Azure Data Factory (ADF) |
 | Architecture | Medallion Architecture (Bronze → Silver → Gold) |
-| Database | Azure Blob Storage, Azure Data Lake |
+| Database | Azure Synapse Pools |
 | Misc | Azure Portal, MongoDB, SQL |
 
 ---
@@ -61,21 +60,40 @@ The raw data comes from a Kaggle dataset on Brazilian e-commerce and includes **
 This project follows the **Medallion Architecture** pattern:
 
 ```plaintext
-           ┌────────────┐
-           │   Raw Data │
-           └────┬───────┘
-                │
-                ▼
-        ┌──────────────┐
-        │   Bronze      │  <- Raw Ingested Data from Github, SQL DB, MongoDb(Using ADF)
-        └────┬─────────┘
-             │
-             ▼
-        ┌──────────────┐
-        │   Silver      │  <- Cleaned & Joined Data(Azure Data Factory)
-        └────┬─────────┘
-             │
-             ▼
-        ┌──────────────┐
-        │    Gold       │  <- Business-Ready Data(Synapse)
-        └──────────────┘
+                                   🔽
+        +-----------------------------+
+        |        Data Sources         |
+        |-----------------------------|
+        | Kaggle CSVs, SQL (files.io),|
+        | MongoDB Export              |
+        +-------------+---------------+
+                      |
+                      v
+          +-------------------------+
+          |   Azure Data Factory    |
+          |   (Orchestration Layer) |
+          +-----------+-------------+
+                      |
+                      v
+        +----------------------------+
+        |  Azure Blob Storage (Raw)  |
+        |        Bronze Layer        |
+        +----------------------------+
+                      |
+                      v
+        +-----------------------------+
+        |    Azure Databricks         |
+        |  (Data Cleaning + Spark ETL)|
+        +-------------+---------------+
+                      |
+                      v
+        +-----------------------------+
+        | Azure Data Lake / Synapse   |
+        |       Silver Layer          |
+        +-------------+---------------+
+                      |
+                      v
+        +-----------------------------+
+        |    Azure Synapse SQL Pools  |
+        |       (Gold Layer DB)       |
+        +-----------------------------+
